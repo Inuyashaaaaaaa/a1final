@@ -1,111 +1,57 @@
-<?php  
-
+<?php
 require_once 'dbConfig.php';
 
+function insertNewUser($pdo, $first_name, $last_name, $email, $gender, $position, $years_of_experience) {
+    $sql = "INSERT INTO data_analyst_employees (first_name, last_name, email, gender, position, years_of_experience) 
+            VALUES (?, ?, ?, ?, ?, ?)";
+    $stmt = $pdo->prepare($sql);
+    return $stmt->execute([$first_name, $last_name, $email, $gender, $position, $years_of_experience]);
+}
+
 function getAllUsers($pdo) {
-	$sql = "SELECT * FROM data_analyst_employees 
-			ORDER BY first_name ASC";
-	$stmt = $pdo->prepare($sql);
-	$executeQuery = $stmt->execute();
-	if ($executeQuery) {
-		return $stmt->fetchAll();
-	}
+    $sql = "SELECT * FROM data_analyst_employees ORDER BY date_added DESC";
+    $stmt = $pdo->prepare($sql);
+    $executeQuery = $stmt->execute();
+    if ($executeQuery) {
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    return [];
 }
 
 function getUserByID($pdo, $id) {
-	$sql = "SELECT * from data_analyst_employees WHERE id = ?";
-	$stmt = $pdo->prepare($sql);
-	$executeQuery = $stmt->execute([$id]);
-
-	if ($executeQuery) {
-		return $stmt->fetch();
-	}
+    $sql = "SELECT * FROM data_analyst_employees WHERE id = ?";
+    $stmt = $pdo->prepare($sql);
+    if ($stmt->execute([$id])) {
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    return null;
 }
 
-function searchForAUser($pdo, $searchQuery) {
-	
-	$sql = "SELECT * FROM data_analyst_employees WHERE 
-			CONCAT(first_name,last_name,email,gender,
-				address,state,nationality,car_brand,date_added) 
-			LIKE ?";
-
-	$stmt = $pdo->prepare($sql);
-	$executeQuery = $stmt->execute(["%".$searchQuery."%"]);
-	if ($executeQuery) {
-		return $stmt->fetchAll();
-	}
+function editUser($pdo, $first_name, $last_name, $email, $gender, $position, $years_of_experience, $id) {
+    $sql = "UPDATE data_analyst_employees 
+            SET first_name = ?, last_name = ?, email = ?, gender = ?, position = ?, years_of_experience = ? 
+            WHERE id = ?";
+    $stmt = $pdo->prepare($sql);
+    return $stmt->execute([$first_name, $last_name, $email, $gender, $position, $years_of_experience, $id]);
 }
-
-
-
-function insertNewUser($pdo, $first_name, $last_name, $email, 
-	$gender, $address, $state, $nationality, $car_brand) {
-
-	$sql = "INSERT INTO data_analyst_employees 
-			(
-				first_name,
-				last_name,
-				email,
-				gender,
-				address,
-				state,
-				nationality,
-				car_brand
-			)
-			VALUES (?,?,?,?,?,?,?,?)
-			";
-
-	$stmt = $pdo->prepare($sql);
-	$executeQuery = $stmt->execute([
-		$first_name, $last_name, $email, 
-		$gender, $address, $state, 
-		$nationality, $car_brand,
-	]);
-
-	if ($executeQuery) {
-		return true;
-	}
-
-}
-
-function editUser($pdo, $first_name, $last_name, $email, $gender, 
-	$address, $state, $nationality, $car_brand, $id) {
-
-	$sql = "UPDATE data_analyst_employees
-				SET first_name = ?,
-					last_name = ?,
-					email = ?,
-					gender = ?,
-					address = ?,
-					state = ?,
-					nationality = ?,
-					car_brand = ?
-				WHERE id = ? 
-			";
-
-	$stmt = $pdo->prepare($sql);
-	$executeQuery = $stmt->execute([$first_name, $last_name, $email, $gender, 
-		$address, $state, $nationality,$car_brand, $id]);
-
-	if ($executeQuery) {
-		return true;
-	}
-
-}
-
 
 function deleteUser($pdo, $id) {
-	$sql = "DELETE FROM data_analyst_employees 
-			WHERE id = ?";
-	$stmt = $pdo->prepare($sql);
-	$executeQuery = $stmt->execute([$id]);
-
-	if ($executeQuery) {
-		return true;
-	}
+    $sql = "DELETE FROM data_analyst_employees WHERE id = ?";
+    $stmt = $pdo->prepare($sql);
+    return $stmt->execute([$id]);
 }
 
-
-
-
+function searchForAUser($pdo, $searchTerm) {
+    $searchTerm = "%$searchTerm%";
+    $sql = "SELECT * FROM data_analyst_employees 
+            WHERE first_name LIKE ? 
+            OR last_name LIKE ? 
+            OR email LIKE ? 
+            OR position LIKE ?";
+    $stmt = $pdo->prepare($sql);
+    if ($stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm])) {
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    return [];
+}
 ?>
